@@ -103,7 +103,7 @@ class Data extends AbstractHelper
     public function getCustomerName()
     {
         if ($this->isCustomerLoggedIn()) {
-            return $this->customerSession->getName();
+            return $this->customerSession->getCustomer()->getName();
         }
 
         return 'Guest' . $this->getGuestCustomerId();
