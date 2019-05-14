@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="head.additional">
+            <block class="Magento\Framework\View\Element\Template" name="clawrock.fullstory.head.scripts"
+                   template="ClawRock_FullStory::scripts.phtml" ifconfig="clawrock_fullstory/general/enabled">
+                <arguments>
+                    <argument name="viewModel" xsi:type="object">ClawRock\FullStory\Block\View\HeadScript</argument>
+                </arguments>
+            </block>
+        </referenceBlock>
+    </body>
+</page>
