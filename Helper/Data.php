@@ -2,6 +2,7 @@
 
 namespace ClawRock\FullStory\Helper;
 
+use Magento\Customer\Model\VisitorFactory;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Exception\LocalizedException;
@@ -24,14 +25,9 @@ class Data extends AbstractHelper
     const CONFIG_MODULE_SCRIPT_ID = "clawrock_fullstory/general/fs_org";
 
     /**
-     * Min random guest ID
+     * Start Guest ID. Create next ID as sum this number with customer_visitor ID
      */
-    const RANDOM_GUEST_ID_MIN = 1;
-
-    /**
-     * Max random guest ID
-     */
-    const RANDOM_GUEST_ID_MAX = 1000;
+    const FIXED_GUEST_ID = 100000;
 
     /**
      * Guest ID session key
@@ -39,30 +35,30 @@ class Data extends AbstractHelper
     const GUEST_ID_KEY = 'guestId';
 
     /**
-     * @var \Magento\Customer\Model\Session
+     * @var \Magento\Customer\Model\Session\Proxy
      */
     protected $customerSession;
 
     /**
-     * @var \Magento\Framework\Math\Random
+     * @var VisitorFactory
      */
-    protected $mathRandom;
+    protected $visitorFactory;
 
     /**
      * Data constructor.
      * @param Context $context
-     * @param \Magento\Customer\Model\Session $customerSession
-     * @param \Magento\Framework\Math\Random $mathRandom
+     * @param \Magento\Customer\Model\Session\Proxy $customerSession
+     * @param VisitorFactory $visitorFactory
      */
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
-        \Magento\Customer\Model\Session $customerSession,
-        \Magento\Framework\Math\Random $mathRandom
+        \Magento\Customer\Model\Session\Proxy $customerSession,
+        \Magento\Customer\Model\VisitorFactory $visitorFactory
     ) {
         parent::__construct($context);
 
         $this->customerSession = $customerSession;
-        $this->mathRandom = $mathRandom;
+        $this->visitorFactory = $visitorFactory;
     }
 
     /**
@@ -122,16 +118,30 @@ class Data extends AbstractHelper
     }
 
     /**
-     * @return integer
-     * @throws LocalizedException
+     * @return mixed
+     * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     private function getGuestCustomerId()
     {
-        if (!$this->customerSession->getData(self::GUEST_ID_KEY)) {
-            $randomNumber = $this->mathRandom->getRandomNumber(self::RANDOM_GUEST_ID_MIN,
-                self::RANDOM_GUEST_ID_MAX);
+        $this->customerSession->setData(self::GUEST_ID_KEY, null);
 
-            $this->customerSession->setData(self::GUEST_ID_KEY, $randomNumber);
+        //if guest ID is empty then get or create it
+        if (!$this->customerSession->getData(self::GUEST_ID_KEY)) {
+            $sessionId = $this->customerSession->getSessionId();
+            $visitor = $this->visitorFactory->create();
+            //check if ID with current session exists in visitor table
+            $existsVisitor = $visitor->getCollection()
+                ->addFieldToFilter('session_id', $sessionId)
+                ->getFirstItem();
+            $visitorId = $existsVisitor->getId();
+            //if not then save new record and get ID
+            if (!$visitorId) {
+                $visitor->setData('session_id', $sessionId);
+                $visitor->getResource()->save($visitor);
+                $visitorId = $visitor->getId();
+            }
+            //save guest id to session
+            $this->customerSession->setData(self::GUEST_ID_KEY, self::FIXED_GUEST_ID + $visitorId);
         }
 
         return $this->customerSession->getData(self::GUEST_ID_KEY);
