@@ -69,7 +69,7 @@ $fullStoryId = $helper->getFullStoryId();
             email: '<?= $helper->getCustomerEmail() ?>'
         });
         <?php else: ?>
-        FS.identify('<?= $helper->getCustomerId() ?>', {
+        FS.identify('<?= $helper->getCustomerName() ?>', {
             displayName: '<?= $helper->getCustomerName() ?>'
         });
         <?php endif; ?>
