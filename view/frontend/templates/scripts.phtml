@@ -13,7 +13,7 @@ $fullStoryId = $helper->getFullStoryId();
     <script>
         window['_fs_debug'] = false;
         window['_fs_host'] = 'fullstory.com';
-        window['_fs_org'] = '<?= $fullStoryId ?>';
+        window['_fs_org'] = '<?= $block->escapeJs($fullStoryId) ?>';
         window['_fs_namespace'] = 'FS';
         (function (m, n, e, t, l, o, g, y) {
             if (e in m) {
@@ -61,18 +61,7 @@ $fullStoryId = $helper->getFullStoryId();
             };
         })(window, document, window['_fs_namespace'], 'script', 'user');
     </script>
-
     <script>
-        <?php if($helper->getCustomerEmail()): ?>
-        FS.identify('<?= $helper->getCustomerId() ?>', {
-            displayName: '<?= $helper->getCustomerName() ?>',
-            email: '<?= $helper->getCustomerEmail() ?>'
-        });
-        <?php else: ?>
-        FS.identify('<?= $helper->getCustomerName() ?>', {
-            displayName: '<?= $helper->getCustomerName() ?>'
-        });
-        <?php endif; ?>
+        FS.identify('<?= $block->escapeJs($helper->getCustomerId()) ?>', <?= json_encode($helper->getUserData()) ?>);
     </script>
-
 <?php endif; ?>

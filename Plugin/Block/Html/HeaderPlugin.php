@@ -32,7 +32,7 @@ class HeaderPlugin
      */
     public function aroundGetWelcome(\Magento\Theme\Block\Html\Header $header, \Closure $proceed)
     {
-        if ($this->moduleHelper->getFullStoryId() && !$this->moduleHelper->isCustomerLoggedIn() && $this->moduleHelper->getCustomerName()) {
+        if ($this->moduleHelper->isModuleEnabled() && !$this->moduleHelper->isCustomerLoggedIn() && $this->moduleHelper->getFullStoryId() && $this->moduleHelper->getCustomerName()) {
             return $header->escapeHtml(sprintf(__('Welcome %s!'), $this->moduleHelper->getCustomerName()));
         }
 

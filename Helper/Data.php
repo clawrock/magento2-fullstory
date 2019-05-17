@@ -45,20 +45,28 @@ class Data extends AbstractHelper
     protected $visitorFactory;
 
     /**
+     * @var \Magento\Framework\App\Config\ScopeConfigInterface
+     */
+    protected $scopeConfig;
+
+    /**
      * Data constructor.
      * @param Context $context
      * @param \Magento\Customer\Model\Session\Proxy $customerSession
      * @param VisitorFactory $visitorFactory
+     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      */
     public function __construct(
         \Magento\Framework\App\Helper\Context $context,
         \Magento\Customer\Model\Session\Proxy $customerSession,
-        \Magento\Customer\Model\VisitorFactory $visitorFactory
+        \Magento\Customer\Model\VisitorFactory $visitorFactory,
+        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
     ) {
         parent::__construct($context);
 
         $this->customerSession = $customerSession;
         $this->visitorFactory = $visitorFactory;
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -89,7 +97,7 @@ class Data extends AbstractHelper
             return $this->customerSession->getId();
         }
 
-        return $this->getGuestCustomerId();
+        return 'Guest' . $this->getGuestCustomerId();
     }
 
     /**
@@ -118,13 +126,31 @@ class Data extends AbstractHelper
     }
 
     /**
+     * @return array
+     * @throws LocalizedException
+     */
+    public function getUserData()
+    {
+        return array_filter([
+            'displayName' => $this->getCustomerName(),
+            'email' => $this->getCustomerEmail()
+        ]);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isModuleEnabled()
+    {
+        return (bool)$this->scopeConfig->getValue(self::CONFIG_MODULE_IS_ENABLED);
+    }
+
+    /**
      * @return mixed
      * @throws \Magento\Framework\Exception\AlreadyExistsException
      */
     private function getGuestCustomerId()
     {
-        $this->customerSession->setData(self::GUEST_ID_KEY, null);
-
         //if guest ID is empty then get or create it
         if (!$this->customerSession->getData(self::GUEST_ID_KEY)) {
             $sessionId = $this->customerSession->getSessionId();
